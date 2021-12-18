@@ -74,7 +74,6 @@ class ImportMdb implements ShouldQueue
                     'customer_import_id' => optional($this->customerImport)->id,
                 ]
             );
-            if($ctr > 1000) { break; }
         }
     }
 
