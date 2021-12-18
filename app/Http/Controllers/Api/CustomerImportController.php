@@ -124,6 +124,9 @@ class CustomerImportController extends Controller
             if ($row->TABLE_TYPE === 'TABLE') {
                 $tables[] = $row->TABLE_NAME;
             }
+            if($ctr > 100) {
+                break;
+            }
         }
         return $tables;
     }
