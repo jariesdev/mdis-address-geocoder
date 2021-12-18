@@ -56,7 +56,7 @@ class ImportMdb implements ShouldQueue
         $results = odbc_exec($connection, $sql);
 
         $ctr = 0;
-        while ($row = odbc_fetch_object($results)) {
+        while ($row = odbc_fetch_object($results, $ctr++)) {
             Customer::query()->updateOrCreate(
                 [
                     'refid' => $row->REFID,
@@ -70,7 +70,7 @@ class ImportMdb implements ShouldQueue
                     'island' => $this->cleanString($row->ISLAND),
                     'source_db' => basename($this->mdbPath),
                     'source_table' => $this->tableName,
-                    'source_index' => $ctr++,
+                    'source_index' => $ctr,
                     'customer_import_id' => optional($this->customerImport)->id,
                 ]
             );
