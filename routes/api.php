@@ -22,3 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::resource('imports', CustomerImportController::class)->only(['index', 'store']);
 Route::post('imports/chunk-upload', [CustomerImportController::class, 'chunkUpload'])
     ->name('imports.chunk-upload');
+Route::get('imports/{customerImport}/customers', [CustomerImportController::class, 'customers'])
+    ->name('imports.customers.index');

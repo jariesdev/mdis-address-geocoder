@@ -13,7 +13,11 @@
             <tbody>
             <template v-if="customerImports.length > 0">
                 <tr v-for="(row,index) in customerImports" :key="index">
-                    <td>{{ row.file }}</td>
+                    <td>
+                        <a :href="`/imports/${row.id}/customers`">
+                            {{ row.file }}
+                        </a>
+                    </td>
                     <td>{{ row.status }}</td>
                     <td>{{ row.total }}</td>
                     <td>

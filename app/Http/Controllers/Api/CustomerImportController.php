@@ -19,17 +19,27 @@ class CustomerImportController extends Controller
      */
     private $customerRepository;
 
+    /**
+     * @param  CustomerInterface  $customerRepository
+     */
     public function __construct(CustomerInterface $customerRepository)
     {
         $this->customerRepository = $customerRepository;
     }
 
+    /**
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function index()
     {
         $imports = CustomerImport::all();
         return CustomerImportResource::collection($imports);
     }
 
+    /**
+     * @param  Request  $request
+     * @return JsonResource
+     */
     public function store(Request $request)
     {
         $filename = $request->post('file');
@@ -57,6 +67,10 @@ class CustomerImportController extends Controller
         return new JsonResource($customerImport);
     }
 
+    /**
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse|void
+     */
     public function chunkUpload(Request $request)
     {
         if (empty($_FILES) || $_FILES['file']['error']) {
@@ -113,6 +127,10 @@ class CustomerImportController extends Controller
         ]);
     }
 
+    /**
+     * @param  string  $filePath
+     * @return array
+     */
     private function getMdbTables(string $filePath)
     {
         $tables = [];
@@ -133,5 +151,16 @@ class CustomerImportController extends Controller
             odbc_close($connection);
         }catch (\Throwable $exception) {}
         return $tables;
+    }
+
+    /**
+     * @param  Request  $request
+     * @param  CustomerImport  $customerImport
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
+    public function customers(Request $request, CustomerImport $customerImport)
+    {
+        $customers = $customerImport->customers()->simplePaginate($request->get('perPage', 15));
+        return JsonResource::collection($customers);
     }
 }

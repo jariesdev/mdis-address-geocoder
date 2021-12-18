@@ -12,10 +12,14 @@ export const customerImport = () => {
     const generateCsv = (importId) => {
         return http.post(`/api/imports/${importId}/generate`).then(({data}) => data);
     }
+    const getCustomers = (importId, params) => {
+        return http.get(`/api/imports/${importId}/customers`, {params: params}).then(({data}) => data);
+    }
 
     return {
         getCustomerImports,
         createCustomerImports,
         generateCsv,
+        getCustomers,
     }
 }

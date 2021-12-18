@@ -15,3 +15,4 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('/', [CustomerImportController::class, 'index'])->name('imports.index');
 Route::get('/imports/create', [CustomerImportController::class, 'create'])->name('imports.create');
+Route::get('/imports/{customerImport}/customers', [CustomerImportController::class, 'customers'])->name('imports.customers.index');

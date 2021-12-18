@@ -16,3 +16,5 @@ yarn-error.log
 *.mdb
 public/js/*.js
 public/js/*.css
+storage/uploads/**
+storage/exports/**
