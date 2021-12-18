@@ -38,7 +38,7 @@
                     </td>
                     <td>
                         <div class="btn-group">
-                            <button class="btn btn-sm btn-info" :disabled="row.status !== 'completed'" @click="generateCsvTrigger(row)">Generate</button>
+                            <button class="btn btn-sm btn-info" :disabled="!['coordinate-located','completed'].includes(row.status)" @click="generateCsvTrigger(row)">Generate</button>
                             <a v-if="!!row.csv_path" :href="`/api/imports/${row.id}/download-csv`" :class="{'disabled' : row.status !== 'completed'}" class="btn btn-sm btn-primary">Download</a>
                         </div>
                     </td>
