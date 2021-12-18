@@ -19298,9 +19298,17 @@ var __default__ = {
       //
       // });
 
-      uploader.value.bind('FileUploaded', function (up, file) {
+      uploader.value.bind('FileUploaded', function (up, file, info) {
+        var tableNames = JSON.parse(info.response).tables || [];
         form.file = file.name;
-        submit();
+
+        if (!form.table_name && tableNames.length > 0) {
+          form.table_name = tableNames[0];
+        }
+
+        if (form.file && form.table_name) {
+          submit();
+        }
       });
     };
 
@@ -19442,16 +19450,18 @@ var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElement
 /* HOISTED */
 );
 
-var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+var _hoisted_11 = ["disabled"];
+
+var _hoisted_12 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
   "class": "form-text"
-}, " Enter the name of tables to import. ", -1
+}, " Enter the name of tables to import. Leave blank to get first table name. ", -1
 /* HOISTED */
 );
 
-var _hoisted_12 = {
+var _hoisted_13 = {
   "class": "card-actions"
 };
-var _hoisted_13 = ["disabled"];
+var _hoisted_14 = ["disabled"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [$setup.formSuccessMessage ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_2, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.formSuccessMessage), 1
   /* TEXT */
@@ -19487,19 +19497,19 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "onUpdate:modelValue": _cache[0] || (_cache[0] = function ($event) {
       return $setup.form.table_name = $event;
     }),
-    required: "",
     "class": "form-control",
     name: "table_name",
-    id: "table_name"
-  }, null, 512
-  /* NEED_PATCH */
-  ), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.form.table_name]]), _hoisted_11]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    id: "table_name",
+    disabled: $setup.isUploading
+  }, null, 8
+  /* PROPS */
+  , _hoisted_11), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.form.table_name]]), _hoisted_12]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "submit",
     disabled: $setup.isUploading,
     "class": "btn btn-primary me-2"
   }, "Import", 8
   /* PROPS */
-  , _hoisted_13)])], 32
+  , _hoisted_14)])], 32
   /* HYDRATE_EVENTS */
   )]);
 }

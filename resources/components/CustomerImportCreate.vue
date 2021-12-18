@@ -21,9 +21,9 @@
             </div>
             <div class="mb-3">
                 <label for="table_name" class="form-label">Table Name</label>
-                <input v-model="form.table_name" required class="form-control" name="table_name" id="table_name">
+                <input v-model="form.table_name" class="form-control" name="table_name" id="table_name" :disabled="isUploading">
                 <div class="form-text">
-                    Enter the name of tables to import.
+                    Enter the name of tables to import. Leave blank to get first table name.
                 </div>
             </div>
             <div class="card-actions">
@@ -120,9 +120,16 @@ const uploaderInit = () => {
     // uploader.value.bind('ChunkUploaded', function(up, file) {
     //
     // });
-    uploader.value.bind('FileUploaded', function(up, file) {
+    uploader.value.bind('FileUploaded', function(up, file, info) {
+        const tableNames = JSON.parse(info.response).tables || []
         form.file = file.name
-        submit()
+        if(!form.table_name && tableNames.length > 0) {
+            form.table_name = tableNames[0];
+        }
+
+        if(form.file && form.table_name) {
+            submit()
+        }
     });
 }
 
