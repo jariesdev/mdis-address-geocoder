@@ -9,6 +9,7 @@ use App\Models\CustomerImport;
 use App\Repositories\CustomerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 
 class CustomerImportController extends Controller
@@ -41,7 +42,8 @@ class CustomerImportController extends Controller
             ]);
 
         $newFilename = "uploads/imports/{$customerImport->id}.{$filename}";
-        File::move(storage_path("uploads/{$filename}"), storage_path("uploads/imports/{$customerImport->id}.{$filename}"));
+        File::move(storage_path("uploads/{$filename}"),
+            storage_path("uploads/imports/{$customerImport->id}.{$filename}"));
         $customerImport->update([
             'file' => $newFilename,
         ]);
@@ -96,14 +98,33 @@ class CustomerImportController extends Controller
         }
 
 // Check if file has been uploaded
+        $tablesNames = [];
         if (!$chunks || $chunk == $chunks - 1) {
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
+            $tablesNames = $this->getMdbTables($filePath);
         }
+
         return response()->json([
             'OK' => 1,
             'file' => $request->get('name'),
             'info' => 'Upload successful.',
+            'tables' => $tablesNames,
         ]);
+    }
+
+    private function getMdbTables(string $filePath)
+    {
+        $driver = 'MDBTools';
+        $connection = odbc_connect("Driver=$driver; DBQ=$filePath;", null, null);
+        $results = odbc_tables($connection, null, null, null, 'TABLE');
+        $tables = [];
+        $ctr = 0;
+        while ($row = odbc_fetch_object($results, $ctr++)) {
+            if ($row->TABLE_TYPE === 'TABLE') {
+                $tables[] = $row->TABLE_NAME;
+            }
+        }
+        return $tables;
     }
 }
