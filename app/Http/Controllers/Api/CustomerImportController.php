@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\CustomerImportResource;
 use App\Jobs\ExportCustomerCSV;
 use App\Jobs\FindCustomerCoordinate;
 use App\Jobs\ImportMdb;
@@ -9,7 +10,6 @@ use App\Models\CustomerImport;
 use App\Repositories\CustomerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 
 class CustomerImportController extends Controller
@@ -27,7 +27,7 @@ class CustomerImportController extends Controller
     public function index()
     {
         $imports = CustomerImport::all();
-        return JsonResource::collection($imports);
+        return CustomerImportResource::collection($imports);
     }
 
     public function store(Request $request)
@@ -115,19 +115,23 @@ class CustomerImportController extends Controller
 
     private function getMdbTables(string $filePath)
     {
-        $driver = 'MDBTools';
-        $connection = odbc_connect("Driver=$driver; DBQ=$filePath;", null, null);
-        $results = odbc_tables($connection, null, null, null, 'TABLE');
         $tables = [];
-        $ctr = 0;
-        while ($row = odbc_fetch_object($results, $ctr++)) {
-            if ($row->TABLE_TYPE === 'TABLE') {
-                $tables[] = $row->TABLE_NAME;
+        $driver = 'MDBTools';
+        try
+        {
+            $connection = odbc_connect("Driver=$driver; DBQ=$filePath;", null, null);
+            $results = odbc_tables($connection, null, null, null, 'TABLE');
+            $ctr = 0;
+            while ($row = odbc_fetch_array($results, $ctr++)) {
+                if ($row['TABLE_TYPE'] === 'TABLE') {
+                    $tables[] = $row['TABLE_NAME'];
+                }
+                if($ctr > 100) {
+                    break;
+                }
             }
-            if($ctr > 100) {
-                break;
-            }
-        }
+            odbc_close($connection);
+        }catch (\Throwable $exception) {}
         return $tables;
     }
 }

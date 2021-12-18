@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'url' => env('NOMINATIM_URL', 'https://nominatim.openstreetmap.org/search'),
+    'url' => env('NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
 ];

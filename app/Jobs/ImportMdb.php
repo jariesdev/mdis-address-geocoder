@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use PDO;
 
@@ -50,6 +51,15 @@ class ImportMdb implements ShouldQueue
      */
     public function handle()
     {
+        $cacheKey = "imports.{$this->customerImport->id}.record-counter";
+
+
+        if($this->customerImport) {
+            $this->customerImport->update([
+                'status' => 'importing',
+            ]);
+        }
+
         $connection = $this->getConnection();
 
         $sql = "SELECT * FROM {$this->tableName}";
@@ -74,6 +84,15 @@ class ImportMdb implements ShouldQueue
                     'customer_import_id' => optional($this->customerImport)->id,
                 ]
             );
+            Cache::put($cacheKey, $ctr);
+        }
+        odbc_close($connection);
+
+        if($this->customerImport) {
+            $this->customerImport->update([
+                'total' =>  $ctr,
+                'status' => 'imported',
+            ]);
         }
     }
 

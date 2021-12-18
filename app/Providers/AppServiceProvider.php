@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         RateLimiter::for('nominatim', function () {
-            return Limit::perMinute(30);
+            return Limit::perMinute(5);
         });
     }
 }

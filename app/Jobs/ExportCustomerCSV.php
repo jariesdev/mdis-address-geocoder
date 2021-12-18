@@ -40,7 +40,11 @@ class ExportCustomerCSV implements ShouldQueue
      */
     public function handle()
     {
-        $filename = storage_path('test-export-'.time().'.csv');
+        $this->customerImport->update([
+            'status' => 'generating-csv',
+        ]);
+
+        $filename = storage_path("exports/{$this->customerImport->table_name}-{$this->customerImport->id}-location.csv");
         file_put_contents($filename, implode(',', [
             'REFID',
             'STREET',
@@ -51,7 +55,7 @@ class ExportCustomerCSV implements ShouldQueue
             'ISLAND',
             'LATITUDE',
             'LONGITUDE',
-        ]));
+        ]).PHP_EOL);
 
         Customer::query()
             ->where('customer_import_id', $this->customerImport->id)
@@ -71,5 +75,10 @@ class ExportCustomerCSV implements ShouldQueue
                     ]));
                 });
             });
+
+        $this->customerImport->update([
+            'status' => 'completed',
+            'csv_path' => "exports/{$this->customerImport->table_name}-{$this->customerImport->id}-location.csv",
+        ]);
     }
 }

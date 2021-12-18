@@ -18,8 +18,9 @@ class CreateCustomerImports extends Migration
             $table->string('file')->nullable();
             $table->string('table_name')->nullable();
             $table->string('status')->default('pending');
-            $table->integer('success_count')->default(0);
             $table->integer('total')->default(0);
+            $table->integer('success_count')->nullable();
+            $table->string('csv_path')->nullable();
             $table->timestamps();
         });
     }
