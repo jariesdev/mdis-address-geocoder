@@ -61,8 +61,14 @@ class FindCustomerCoordinate implements ShouldQueue
 
         Customer::query()
             ->where('customer_import_id', $this->customerImport->id)
+            ->where(function ($builder){
+                $builder
+                    ->whereNull('latitude')
+                    ->orWhereNull('longitude');
+            })
             ->chunk(1000, function (Collection $customers) use ($cacheElapseKey, $cacheKey) {
-                $customers->each(function (Customer $customer) use ($cacheKey) {
+                $customers->each(function (Customer $customer) use ($cacheElapseKey, $cacheKey) {
+                    Cache::increment($cacheElapseKey);
                     try {
                         $coordinate = $this->findCustomerCoordinate($customer);
                         if($coordinate) {
@@ -82,7 +88,6 @@ class FindCustomerCoordinate implements ShouldQueue
                         ]);
                     }
                 });
-                Cache::increment($cacheElapseKey, $customers->count());
             });
 
         $this->customerImport->update([

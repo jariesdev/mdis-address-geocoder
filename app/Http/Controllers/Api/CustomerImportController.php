@@ -163,4 +163,31 @@ class CustomerImportController extends Controller
         $customers = $customerImport->customers()->simplePaginate($request->get('perPage', 15));
         return JsonResource::collection($customers);
     }
+
+    /**
+     * @param  Request  $request
+     * @param  CustomerImport  $customerImport
+     * @return JsonResource
+     */
+    public function generateCsv(Request $request, CustomerImport $customerImport)
+    {
+        dispatch(new ExportCustomerCSV($customerImport));
+        return JsonResource::make($customerImport);
+    }
+
+    /**
+     * @param  Request  $request
+     * @param  CustomerImport  $customerImport
+     * @return JsonResource
+     */
+    public function downloadCSV(Request $request, CustomerImport $customerImport)
+    {
+        return response()->download(storage_path($customerImport->csv_path));
+    }
+
+    public function locateCustomers(Request $request, CustomerImport $customerImport)
+    {
+        dispatch(new FindCustomerCoordinate($customerImport));
+        return JsonResource::make($customerImport);
+    }
 }

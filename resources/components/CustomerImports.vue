@@ -24,13 +24,23 @@
                         <template v-if="row.status === 'coordinate-searching'">
                             {{ row.success_count === null ? '-' : row.success_count }} / {{ row.search_elapse_count }}
                         </template>
-                        <template v-else>
+                        <template v-else-if="row.success_count > 0">
                             {{ row.success_count === null ? '-' : row.success_count }}
+                            <button class="btn btn-outline-info btn-sm" @click="locateImportCustomers(row)">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </template>
+                        <template v-else>
+                            <button class="btn btn-outline-info btn-sm" @click="locateImportCustomers(row)">
+                                Locate <i class="fa-solid fa-magnifying-glass-location ms-1"></i>
+                            </button>
                         </template>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-info" :disabled="!/csv/.test(row.status)" @click="generateCsvTrigger()">Generate</button>
-                        <a v-if="!!row.csv_path" :href="`/api/imports/${row.id}/download-csv`" :class="{'disabled' : row.status !== 'csv-generated'}" class="btn btn-sm btn-info">Download</a>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-info" :disabled="row.status !== 'completed'" @click="generateCsvTrigger(row)">Generate</button>
+                            <a v-if="!!row.csv_path" :href="`/api/imports/${row.id}/download-csv`" :class="{'disabled' : row.status !== 'completed'}" class="btn btn-sm btn-primary">Download</a>
+                        </div>
                     </td>
                 </tr>
             </template>
@@ -58,7 +68,7 @@ export default {
 import {customerImport} from "@/composables/customers.js";
 import {onMounted, ref} from "vue";
 
-const {getCustomerImports, generateCsv} = customerImport()
+const {getCustomerImports, generateCsv, locateCustomers} = customerImport()
 
 const customerImports = ref([]);
 
@@ -67,9 +77,13 @@ const loadCustomerImports = () => {
         customerImports.value = data
     })
 }
-const generateCsvTrigger = () => {
-    generateCsv()
-    loadCustomerImports()
+const generateCsvTrigger = (row) => {
+    row.status = 'generating-csv'
+    generateCsv(row.id)
+}
+const locateImportCustomers = (row) => {
+    row.status = 'coordinate-searching'
+    locateCustomers(row.id)
 }
 
 onMounted(() => {

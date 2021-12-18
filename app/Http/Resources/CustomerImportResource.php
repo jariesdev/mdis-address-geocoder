@@ -25,6 +25,7 @@ class CustomerImportResource extends JsonResource
             'search_elapse_count' => $status === 'coordinate-searching' ? Cache::get("imports.{$this->resource->id}.success-elapse-counter", 0) : 0,
             'total' => $status === 'importing' ? Cache::get("imports.{$this->resource->id}.record-counter", 0) : $this->resource->total,
             'created_at' => $this->resource->created_at,
+            'csv_path' => $this->resource->csv_path,
             'updated_at' => $this->resource->updated_at,
         ];
     }

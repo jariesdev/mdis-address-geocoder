@@ -15,11 +15,15 @@ export const customerImport = () => {
     const getCustomers = (importId, params) => {
         return http.get(`/api/imports/${importId}/customers`, {params: params}).then(({data}) => data);
     }
+    const locateCustomers = (importId) => {
+        return http.post(`/api/imports/${importId}/locate-customers`).then(({data}) => data);
+    }
 
     return {
         getCustomerImports,
         createCustomerImports,
         generateCsv,
         getCustomers,
+        locateCustomers,
     }
 }
