@@ -19,13 +19,15 @@
                         </a>
                     </td>
                     <td>{{ row.status }}</td>
-                    <td>{{ row.total }}</td>
+                    <td>
+                        <animated-number :value="row.total" :tween-duration="1500" />
+                    </td>
                     <td>
                         <template v-if="row.status === 'coordinate-searching'">
-                            {{ row.success_count === null ? '-' : row.success_count }} / {{ row.search_elapse_count }}
+                            <animated-number :value="row.success_count || 0" :tween-duration="1500" /> / <animated-number value="row.search_elapse_count" :tween-duration="1500" />
                         </template>
                         <template v-else-if="row.success_count > 0">
-                            {{ row.success_count === null ? '-' : row.success_count }}
+                            <animated-number :value="row.success_count || 0" :tween-duration="1500" />
                             <button class="btn btn-outline-info btn-sm" @click="locateImportCustomers(row)">
                                 <i class="fa-solid fa-arrows-rotate"></i>
                             </button>
@@ -67,6 +69,7 @@ export default {
 <script setup>
 import {customerImport} from "@/composables/customers.js";
 import {onMounted, ref} from "vue";
+import AnimatedNumber from "./AnimatedNumber.vue";
 
 const {getCustomerImports, generateCsv, locateCustomers} = customerImport()
 
