@@ -53,7 +53,7 @@ onMounted(() => {
     tween(0, props.value)
 })
 
-watch(() => props.value, (oldVal, newVal) => {
+watch(() => props.value, (newVal, oldVal) => {
     tween(oldVal, newVal)
 })
 </script>
