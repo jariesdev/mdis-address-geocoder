@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Customer;
 use App\Models\CustomerImport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -11,10 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use PDO;
+use Illuminate\Support\Collection;
 use Symfony\Component\Process\Process;
 
 class ImportMdb implements ShouldQueue
@@ -92,30 +88,33 @@ class ImportMdb implements ShouldQueue
     private function importFromCsv(string $csvPath)
     {
         $this->ctr = 0;
-        $cacheKey = "imports.{$this->customerImport->id}.record-counter";
         $file = fopen($csvPath, 'r');
         fgetcsv($file); // skip first line (headers)
-        while (($line = fgetcsv($file)) !== FALSE) {
-            Customer::query()->updateOrCreate(
-                [
-                    'refid' => Arr::get($line, 0,)
-                ],
-                [
-                    'street' => $this->cleanString(Arr::get($line, 1)),
-                    'barangay_name' => $this->cleanString(Arr::get($line, 2)),
-                    'municipality_name' => $this->cleanString(Arr::get($line, 3)),
-                    'province_name' => $this->cleanString(Arr::get($line, 4)),
-                    'region' => $this->cleanString(Arr::get($line, 5)),
-                    'island' => $this->cleanString(Arr::get($line, 6)),
-                    'source_db' => basename($this->mdbPath),
-                    'source_table' => $this->tableName,
-                    'source_index' => ++$this->ctr,
-                    'customer_import_id' => optional($this->customerImport)->id,
-                ]
-            );
-            Cache::increment($cacheKey);
+        $items = new Collection();
+        while (($line = fgetcsv($file)) !== false) {
+            if (($items->count() % 10000) === 0 && $items->isNotEmpty()) {
+                dispatch(new BatchCustomerInsert($items, $this->customerImport));
+                $items = new Collection();
+            }
+
+            $items->push([
+                'refid' => Arr::get($line, 0,),
+                'street' => $this->cleanString(Arr::get($line, 1)),
+                'barangay_name' => $this->cleanString(Arr::get($line, 2)),
+                'municipality_name' => $this->cleanString(Arr::get($line, 3)),
+                'province_name' => $this->cleanString(Arr::get($line, 4)),
+                'region' => $this->cleanString(Arr::get($line, 5)),
+                'island' => $this->cleanString(Arr::get($line, 6)),
+                'source_db' => basename($this->mdbPath),
+                'source_table' => $this->tableName,
+                'source_index' => ++$this->ctr,
+                'customer_import_id' => optional($this->customerImport)->id,
+            ]);
         }
-        Cache::forget($cacheKey);
         fclose($file);
+
+        if ($items->isNotEmpty()) {
+            dispatch(new BatchCustomerInsert($items, $this->customerImport));
+        }
     }
 }
