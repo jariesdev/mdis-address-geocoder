@@ -45,14 +45,15 @@ class BatchCustomerInsert implements ShouldQueue
     public function handle()
     {
         $cacheKey = "imports.{$this->customerImport->id}.record-counter";
-        if(!Cache::has($cacheKey)) {
+        if (!Cache::has($cacheKey)) {
             Cache::put($cacheKey, 0, now()->addDay());
         }
 
         $this->customerData->each(function (array $data) use ($cacheKey) {
             Customer::query()->updateOrCreate(
                 [
-                    'refid' => Arr::pull($data, 'refid')
+                    'refid' => Arr::pull($data, 'refid'),
+                    'customer_import_id' => Arr::pull($data, 'customer_import_id'),
                 ],
                 $data
             );
