@@ -24,7 +24,7 @@
                     </td>
                     <td>
                         <template v-if="row.status === 'coordinate-searching'">
-                            <animated-number :value="row.success_count || 0" :tween-duration="1500" /> / <animated-number value="row.search_elapse_count" :tween-duration="1500" />
+                            <animated-number :value="row.success_count || 0" :tween-duration="1500" /> / <animated-number :value="row.search_elapse_count" :tween-duration="1500" />
                         </template>
                         <template v-else-if="row.success_count > 0">
                             <animated-number :value="row.success_count || 0" :tween-duration="1500" />
