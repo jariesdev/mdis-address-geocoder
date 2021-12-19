@@ -12,7 +12,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use PDO;
+use Symfony\Component\Process\Process;
 
 class ImportMdb implements ShouldQueue
 {
@@ -30,6 +32,7 @@ class ImportMdb implements ShouldQueue
      * @var CustomerImport
      */
     private $customerImport;
+    private $ctr = 0;
 
     /**
      * Create a new job instance.
@@ -51,46 +54,22 @@ class ImportMdb implements ShouldQueue
      */
     public function handle()
     {
-        $cacheKey = "imports.{$this->customerImport->id}.record-counter";
-
-
         if($this->customerImport) {
             $this->customerImport->update([
                 'status' => 'importing',
             ]);
         }
 
-        $connection = $this->getConnection();
+        $process = Process::fromShellCommandline("mdb-export {$this->mdbPath} {$this->tableName} > {$this->mdbPath}.csv");
+        $process->run();
 
-        $sql = "SELECT * FROM {$this->tableName}";
-        $results = odbc_exec($connection, $sql);
-
-        $ctr = 0;
-        while ($row = odbc_fetch_object($results, $ctr++)) {
-            Customer::query()->updateOrCreate(
-                [
-                    'refid' => $row->REFID,
-                ],
-                [
-                    'street' => $this->cleanString($row->STREET),
-                    'barangay_name' => $this->cleanString($row->BARANGAYNAME),
-                    'municipality_name' => $this->cleanString($row->MUNICIPALITYNAME),
-                    'province_name' => $this->cleanString($row->PROVINCENAME),
-                    'region' => $this->cleanString($row->REGION),
-                    'island' => $this->cleanString($row->ISLAND),
-                    'source_db' => basename($this->mdbPath),
-                    'source_table' => $this->tableName,
-                    'source_index' => $ctr,
-                    'customer_import_id' => optional($this->customerImport)->id,
-                ]
-            );
-            Cache::put($cacheKey, $ctr);
+        if($process->getExitCode() === 0) {
+            $this->importFromCsv("{$this->mdbPath}.csv");
         }
-        odbc_close($connection);
 
         if($this->customerImport) {
             $this->customerImport->update([
-                'total' =>  $ctr,
+                'total' =>  $this->ctr,
                 'status' => 'imported',
             ]);
         }
@@ -107,5 +86,35 @@ class ImportMdb implements ShouldQueue
         $str = preg_replace('/[ ]{2,}/', ' ', $str);
         $str = preg_replace('/[\x00-\x1F\x7F]/', '', $str);
         return $str;
+    }
+
+    private function importFromCsv(string $csvPath)
+    {
+        $this->ctr = 0;
+        $cacheKey = "imports.{$this->customerImport->id}.record-counter";
+        $file = fopen($csvPath, 'r');
+        fgetcsv($file); // skip first line (headers)
+        while (($line = fgetcsv($file)) !== FALSE) {
+            Customer::query()->updateOrCreate(
+                [
+                    'refid' => $line[0],
+                ],
+                [
+                    'street' => $this->cleanString($line[1]),
+                    'barangay_name' => $this->cleanString($line[2]),
+                    'municipality_name' => $this->cleanString($line[3]),
+                    'province_name' => $this->cleanString($line[4]),
+                    'region' => $this->cleanString($line[5]),
+                    'island' => $this->cleanString($line[6]),
+                    'source_db' => basename($this->mdbPath),
+                    'source_table' => $this->tableName,
+                    'source_index' => ++$this->ctr,
+                    'customer_import_id' => optional($this->customerImport)->id,
+                ]
+            );
+            Cache::increment($cacheKey);
+        }
+        Cache::forget($cacheKey);
+        fclose($file);
     }
 }
