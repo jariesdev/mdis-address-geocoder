@@ -84,7 +84,8 @@ return [
     */
 
     'waits' => [
-        'redis:default' => 60,
+        'redis:default' => 3600,
+        'redis:heavy,nominatim' => 0,
     ],
 
     /*
@@ -174,6 +175,7 @@ return [
             'tries' => 1,
             'nice' => 0,
             'timeout' => 3600,
+            'stopWaitSecs' => 0,
         ],
         'supervisor-heavy' => [
             'connection' => 'redis',
@@ -184,6 +186,7 @@ return [
             'tries' => 1,
             'nice' => 0,
             'timeout' => 0,
+            'stopWaitSecs' => 0,
         ],
         'supervisor-nominatim' => [
             'connection' => 'redis',
@@ -194,6 +197,7 @@ return [
             'tries' => 1,
             'nice' => 0,
             'timeout' => 0,
+            'stopWaitSecs' => 0,
         ],
     ],
 
