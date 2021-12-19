@@ -56,7 +56,7 @@ return [
 
     'prefix' => env(
         'HORIZON_PREFIX',
-        Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'
+        Str::slug(env('APP_NAME', 'address-geocoder'), '_').'_horizon:'
     ),
 
     /*
@@ -165,7 +165,7 @@ return [
     */
 
     'defaults' => [
-        'supervisor-1' => [
+        'supervisor-normal' => [
             'connection' => 'redis',
             'queue' => ['default'],
             'balance' => 'auto',
@@ -173,21 +173,54 @@ return [
             'memory' => 128,
             'tries' => 1,
             'nice' => 0,
+            'timeout' => 3600,
+        ],
+        'supervisor-heavy' => [
+            'connection' => 'redis',
+            'queue' => ['heavy'],
+            'balance' => 'auto',
+            'maxProcesses' => 3,
+            'memory' => 128,
+            'tries' => 1,
+            'nice' => 0,
+            'timeout' => 0,
+        ],
+        'supervisor-nominatim' => [
+            'connection' => 'redis',
+            'queue' => ['nominatim'],
+            'balance' => 'auto',
+            'maxProcesses' => 1,
+            'memory' => 128,
+            'tries' => 1,
+            'nice' => 0,
+            'timeout' => 0,
         ],
     ],
 
     'environments' => [
         'production' => [
-            'supervisor-1' => [
-                'maxProcesses' => 10,
+            'supervisor-normal' => [
+                'maxProcesses' => 5,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
+            ],
+            'supervisor-heavy' => [
+                'maxProcesses' => 3,
+            ],
+            'supervisor-nominatim' => [
+                'maxProcesses' => 1,
             ],
         ],
 
         'local' => [
-            'supervisor-1' => [
+            'supervisor-normal' => [
                 'maxProcesses' => 3,
+            ],
+            'supervisor-heavy' => [
+                'maxProcesses' => 3,
+            ],
+            'supervisor-nominatim' => [
+                'maxProcesses' => 1,
             ],
         ],
     ],

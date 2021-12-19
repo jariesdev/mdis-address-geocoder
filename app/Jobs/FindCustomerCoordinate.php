@@ -36,6 +36,8 @@ class FindCustomerCoordinate implements ShouldQueue
     public function __construct(CustomerImport $customerImport)
     {
         $this->customerImport = $customerImport;
+
+        $this->onQueue('nominatim');
     }
 
     /**

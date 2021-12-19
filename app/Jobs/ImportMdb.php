@@ -42,6 +42,8 @@ class ImportMdb implements ShouldQueue
         $this->mdbPath = storage_path($customerImport->file);
         $this->tableName = $customerImport->table_name;
         $this->customerImport = $customerImport;
+
+        $this->onQueue('heavy');
     }
 
     /**
