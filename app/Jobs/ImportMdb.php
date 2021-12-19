@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\Process\Process;
 
 class ImportMdb implements ShouldQueue
@@ -64,12 +65,12 @@ class ImportMdb implements ShouldQueue
             $this->importFromCsv("{$this->mdbPath}.csv");
         }
 
-        if($this->customerImport) {
-            $this->customerImport->update([
-                'total' =>  $this->ctr,
-                'status' => 'imported',
-            ]);
-        }
+//        if($this->customerImport) {
+//            $this->customerImport->update([
+//                'total' =>  $this->ctr,
+//                'status' => 'imported',
+//            ]);
+//        }
     }
 
     protected function getConnection()
@@ -87,6 +88,9 @@ class ImportMdb implements ShouldQueue
 
     private function importFromCsv(string $csvPath)
     {
+        $cacheKey = "imports.{$this->customerImport->id}.import-batch-remaining";
+        Cache::put($cacheKey, 0, now()->addDay());
+
         $this->ctr = 0;
         $file = fopen($csvPath, 'r');
         fgetcsv($file); // skip first line (headers)
@@ -95,6 +99,7 @@ class ImportMdb implements ShouldQueue
             if (($items->count() % 10000) === 0 && $items->isNotEmpty()) {
                 dispatch(new BatchCustomerInsert($items, $this->customerImport));
                 $items = new Collection();
+                Cache::increment($cacheKey);
             }
 
             $items->push([
@@ -115,6 +120,7 @@ class ImportMdb implements ShouldQueue
 
         if ($items->isNotEmpty()) {
             dispatch(new BatchCustomerInsert($items, $this->customerImport));
+            Cache::increment($cacheKey);
         }
     }
 }
