@@ -11,6 +11,7 @@ use App\Repositories\CustomerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Process\Process;
 
 class CustomerImportController extends Controller
 {
@@ -133,24 +134,9 @@ class CustomerImportController extends Controller
      */
     private function getMdbTables(string $filePath)
     {
-        $tables = [];
-        $driver = 'MDBTools';
-        try
-        {
-            $connection = odbc_connect("Driver=$driver; DBQ=$filePath;", null, null);
-            $results = odbc_tables($connection, null, null, null, 'TABLE');
-            $ctr = 0;
-            while ($row = odbc_fetch_array($results, $ctr++)) {
-                if ($row['TABLE_TYPE'] === 'TABLE') {
-                    $tables[] = $row['TABLE_NAME'];
-                }
-                if($ctr > 100) {
-                    break;
-                }
-            }
-            odbc_close($connection);
-        }catch (\Throwable $exception) {}
-        return $tables;
+        $process = (new Process(['mdb-tables', $filePath]));
+        $process->run();
+        return explode(PHP_EOL, trim($process->getOutput()));
     }
 
     /**
