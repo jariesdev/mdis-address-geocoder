@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -97,15 +98,15 @@ class ImportMdb implements ShouldQueue
         while (($line = fgetcsv($file)) !== FALSE) {
             Customer::query()->updateOrCreate(
                 [
-                    'refid' => $line[0],
+                    'refid' => Arr::get($line, 0,)
                 ],
                 [
-                    'street' => $this->cleanString($line[1]),
-                    'barangay_name' => $this->cleanString($line[2]),
-                    'municipality_name' => $this->cleanString($line[3]),
-                    'province_name' => $this->cleanString($line[4]),
-                    'region' => $this->cleanString($line[5]),
-                    'island' => $this->cleanString($line[6]),
+                    'street' => $this->cleanString(Arr::get($line, 1)),
+                    'barangay_name' => $this->cleanString(Arr::get($line, 2)),
+                    'municipality_name' => $this->cleanString(Arr::get($line, 3)),
+                    'province_name' => $this->cleanString(Arr::get($line, 4)),
+                    'region' => $this->cleanString(Arr::get($line, 5)),
+                    'island' => $this->cleanString(Arr::get($line, 6)),
                     'source_db' => basename($this->mdbPath),
                     'source_table' => $this->tableName,
                     'source_index' => ++$this->ctr,
