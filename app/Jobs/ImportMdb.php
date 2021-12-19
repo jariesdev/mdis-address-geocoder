@@ -5,16 +5,12 @@ namespace App\Jobs;
 use App\Models\Customer;
 use App\Models\CustomerImport;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use PDO;
 use Symfony\Component\Process\Process;
 
 class ImportMdb implements ShouldQueue
@@ -46,6 +42,8 @@ class ImportMdb implements ShouldQueue
         $this->mdbPath = $mdbPath;
         $this->tableName = $tableName;
         $this->customerImport = $customerImport;
+
+        $this->onQueue('heavy');
     }
 
     /**
@@ -55,7 +53,7 @@ class ImportMdb implements ShouldQueue
      */
     public function handle()
     {
-        if($this->customerImport) {
+        if ($this->customerImport) {
             $this->customerImport->update([
                 'status' => 'importing',
             ]);
@@ -64,13 +62,13 @@ class ImportMdb implements ShouldQueue
         $process = Process::fromShellCommandline("mdb-export {$this->mdbPath} {$this->tableName} > {$this->mdbPath}.csv");
         $process->run();
 
-        if($process->getExitCode() === 0) {
+        if ($process->getExitCode() === 0) {
             $this->importFromCsv("{$this->mdbPath}.csv");
         }
 
-        if($this->customerImport) {
+        if ($this->customerImport) {
             $this->customerImport->update([
-                'total' =>  $this->ctr,
+                'total' => $this->ctr,
                 'status' => 'imported',
             ]);
         }
@@ -95,7 +93,7 @@ class ImportMdb implements ShouldQueue
         $cacheKey = "imports.{$this->customerImport->id}.record-counter";
         $file = fopen($csvPath, 'r');
         fgetcsv($file); // skip first line (headers)
-        while (($line = fgetcsv($file)) !== FALSE) {
+        while (($line = fgetcsv($file)) !== false) {
             Customer::query()->updateOrCreate(
                 [
                     'refid' => Arr::get($line, 0,)
