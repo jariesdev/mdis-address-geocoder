@@ -43,7 +43,7 @@ class ProcessCustomerImport extends Command
     {
         $importId = $this->argument('importId');
         if($customerImport = CustomerImport::query()->find($importId)) {
-            dispatch(new ImportMdb(storage_path($customerImport->file), $customerImport->table_name, $customerImport))
+            dispatch(new ImportMdb($customerImport))
                 ->chain([
                     new FindCustomerCoordinate($customerImport),
                     new ExportCustomerCSV($customerImport),
