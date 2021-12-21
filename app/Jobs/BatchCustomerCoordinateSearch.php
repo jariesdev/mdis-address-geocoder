@@ -16,6 +16,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 
 class BatchCustomerCoordinateSearch implements ShouldQueue
 {
@@ -39,18 +40,23 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
     {
         $this->customers = $customers;
         $this->customerImport = $customerImport;
+
+        $this->onQueue('nominatim');
     }
 
-    public function middleware()
+    public function handle()
     {
-        return [
-            new NominatimRateLimited(),
-        ];
-    }
-
-    public function retryUntil()
-    {
-        return now()->addMinutes(1);
+        Redis::throttle('nominatim')
+            ->block(0)->allow(1)->every(5)
+            ->then(function () {
+                // Lock obtained...
+                $this->jobLogic();
+            }, function ()  {
+                // Could not obtain lock...
+                echo $this->attempts();
+                dispatch(new self($this->customers, $this->customerImport))->delay(now()->addMinute());
+                $this->delete();
+            });
     }
 
     /**
@@ -58,7 +64,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function jobLogic()
     {
         $successCacheKey = "imports.{$this->customerImport->id}.success-counter";
         if (!Cache::has($successCacheKey)) {
