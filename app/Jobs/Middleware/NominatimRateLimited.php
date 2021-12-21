@@ -24,6 +24,7 @@ class NominatimRateLimited
             }, function () use ($job) {
                 // Could not obtain lock...
                 dispatch(new BatchCustomerCoordinateSearch($job->customers, $job->customerImport))->delay(now()->addMinute());
+                $job->delete();
             });
     }
 }
