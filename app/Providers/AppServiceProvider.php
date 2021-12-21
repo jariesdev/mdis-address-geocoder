@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Jobs\BatchCustomerCoordinateSearch;
 use App\Repositories\CustomerInterface;
 use App\Repositories\CustomerRepository;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -40,8 +41,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        RateLimiter::for('nominatim', function () {
-            return Limit::perMinute(5);
+        RateLimiter::for('nominatim', function (BatchCustomerCoordinateSearch $job) {
+            return Limit::perMinute(1)->by($job->customerImport->id);
         });
     }
 }

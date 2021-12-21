@@ -36,13 +36,6 @@ class FindCustomerCoordinate implements ShouldQueue
         $this->customerImport = $customerImport;
     }
 
-    public function middleware()
-    {
-        return [
-            new RateLimited('nominatim'),
-        ];
-    }
-
     /**
      * Execute the job.
      *
@@ -54,10 +47,8 @@ class FindCustomerCoordinate implements ShouldQueue
             'status' => 'coordinate-searching',
         ]);
 
-        $cacheKey = "imports.{$this->customerImport->id}.success-counter";
-        Cache::put($cacheKey, 0);
-        $cacheElapseKey = "imports.{$this->customerImport->id}.success-elapse-counter";
-        Cache::put($cacheElapseKey, 0);
+        $batchCacheKey = "imports.{$this->customerImport->id}.coordinate-batch-search-remaining";
+        Cache::put($batchCacheKey, 0);
 
         Customer::query()
             ->where('customer_import_id', $this->customerImport->id)
@@ -66,34 +57,10 @@ class FindCustomerCoordinate implements ShouldQueue
                     ->whereNull('latitude')
                     ->orWhereNull('longitude');
             })
-            ->chunk(1000, function (Collection $customers) use ($cacheElapseKey, $cacheKey) {
-                $customers->each(function (Customer $customer) use ($cacheElapseKey, $cacheKey) {
-                    Cache::increment($cacheElapseKey);
-                    try {
-                        $coordinate = $this->findCustomerCoordinate($customer);
-                        if($coordinate) {
-                            Cache::increment($cacheKey);
-                            $customer->update([
-                                'latitude' => $coordinate->latitude,
-                                'longitude' => $coordinate->longitude,
-                                'geocoder_data' => $coordinate->data,
-                            ]);
-                        }
-                    }catch (\Throwable $exception) {
-                        $customer->update([
-                            'geocoder_data' => json_encode([
-                                'success' => false,
-                                'message' => $exception->getMessage(),
-                            ]),
-                        ]);
-                    }
-                });
+            ->chunk(10, function (Collection $customers) use ($batchCacheKey) {
+                dispatch(new BatchCustomerCoordinateSearch($customers, $this->customerImport));
+                Cache::put($batchCacheKey, $customers->count());
             });
-
-        $this->customerImport->update([
-            'status' => 'coordinate-located',
-            'success_count' => Cache::pull($cacheKey, 0),
-        ]);
     }
 
     private function findCustomerCoordinate(Customer $customer)

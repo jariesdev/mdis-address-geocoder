@@ -62,7 +62,6 @@ class CustomerImportController extends Controller
         dispatch(new ImportMdb($customerImport))
             ->chain([
                 new FindCustomerCoordinate($customerImport),
-                new ExportCustomerCSV($customerImport),
             ]);
 
         return new JsonResource($customerImport);
