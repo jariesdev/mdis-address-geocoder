@@ -78,7 +78,9 @@ const submit = () => {
                 uploader.value.removeFile(uploadFile.value)
                 uploader.value.refresh()
             }
-            emit('success')
+            setTimeout(() => {
+                window.location.replace('/')
+            }, 3000)
             formSuccessMessage.value = 'Import successfully uploaded.'
         })
         .catch(() => {

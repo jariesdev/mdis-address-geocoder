@@ -59,10 +59,9 @@ class CustomerImportController extends Controller
             'file' => $newFilename,
         ]);
 
-        dispatch(new ImportMdb(storage_path($customerImport->file), $customerImport->table_name, $customerImport))
+        dispatch(new ImportMdb($customerImport))
             ->chain([
                 new FindCustomerCoordinate($customerImport),
-                new ExportCustomerCSV($customerImport),
             ]);
 
         return new JsonResource($customerImport);

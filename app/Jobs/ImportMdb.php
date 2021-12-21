@@ -2,19 +2,15 @@
 
 namespace App\Jobs;
 
-use App\Models\Customer;
 use App\Models\CustomerImport;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use PDO;
+use SplFileObject;
 use Symfony\Component\Process\Process;
 
 class ImportMdb implements ShouldQueue
@@ -41,10 +37,10 @@ class ImportMdb implements ShouldQueue
      * @param  string  $mdbPath
      * @param  string  $tableName
      */
-    public function __construct(string $mdbPath, string $tableName, CustomerImport $customerImport = null)
+    public function __construct(CustomerImport $customerImport = null)
     {
-        $this->mdbPath = $mdbPath;
-        $this->tableName = $tableName;
+        $this->mdbPath = storage_path($customerImport->file);
+        $this->tableName = $customerImport->table_name;
         $this->customerImport = $customerImport;
     }
 
@@ -55,25 +51,35 @@ class ImportMdb implements ShouldQueue
      */
     public function handle()
     {
-        if($this->customerImport) {
+        if ($this->customerImport) {
             $this->customerImport->update([
                 'status' => 'importing',
             ]);
         }
 
-        $process = Process::fromShellCommandline("mdb-export {$this->mdbPath} {$this->tableName} > {$this->mdbPath}.csv");
+        $csvFilename = sprintf("%s.csv", pathinfo($this->mdbPath, PATHINFO_FILENAME));
+        $csvPath = pathinfo($this->mdbPath, PATHINFO_DIRNAME).'/'.$csvFilename;
+        $process = Process::fromShellCommandline(sprintf(
+            'mdb-export -eH %s %s > %s',
+            $this->mdbPath,
+            $this->tableName,
+            $csvPath
+        ));
         $process->run();
-
-        if($process->getExitCode() === 0) {
-            $this->importFromCsv("{$this->mdbPath}.csv");
+        if ($process->getExitCode() === 0) {
+            $files = $this->splitCsv($csvPath);
+            if (count($files) > 1) {
+                File::delete($csvPath);
+            }
+            $this->importFromCsv($files);
         }
 
-        if($this->customerImport) {
-            $this->customerImport->update([
-                'total' =>  $this->ctr,
-                'status' => 'imported',
-            ]);
-        }
+//        if($this->customerImport) {
+//            $this->customerImport->update([
+//                'total' =>  $this->ctr,
+//                'status' => 'imported',
+//            ]);
+//        }
     }
 
     protected function getConnection()
@@ -89,33 +95,48 @@ class ImportMdb implements ShouldQueue
         return $str;
     }
 
-    private function importFromCsv(string $csvPath)
+    private function importFromCsv(array $csvFiles)
     {
-        $this->ctr = 0;
-        $cacheKey = "imports.{$this->customerImport->id}.record-counter";
-        $file = fopen($csvPath, 'r');
-        fgetcsv($file); // skip first line (headers)
-        while (($line = fgetcsv($file)) !== FALSE) {
-            Customer::query()->updateOrCreate(
-                [
-                    'refid' => Arr::get($line, 0,)
-                ],
-                [
-                    'street' => $this->cleanString(Arr::get($line, 1)),
-                    'barangay_name' => $this->cleanString(Arr::get($line, 2)),
-                    'municipality_name' => $this->cleanString(Arr::get($line, 3)),
-                    'province_name' => $this->cleanString(Arr::get($line, 4)),
-                    'region' => $this->cleanString(Arr::get($line, 5)),
-                    'island' => $this->cleanString(Arr::get($line, 6)),
-                    'source_db' => basename($this->mdbPath),
-                    'source_table' => $this->tableName,
-                    'source_index' => ++$this->ctr,
-                    'customer_import_id' => optional($this->customerImport)->id,
-                ]
-            );
+        $cacheKey = "imports.{$this->customerImport->id}.import-batch-remaining";
+        Cache::put($cacheKey, 0, now()->addDay());
+        foreach ($csvFiles as $file) {
+            dispatch(new BatchCustomerInsert($file, $this->customerImport));
             Cache::increment($cacheKey);
         }
-        Cache::forget($cacheKey);
-        fclose($file);
+    }
+
+    private function splitCsv(string $csvFile): array
+    {
+        $rowPerFile = 100000;
+        $rowCount = $this->getRowCount($csvFile);
+
+        if ($rowCount <= $rowPerFile) {
+            return [$csvFile];
+        }
+
+        $srcFile = new SplFileObject($csvFile);
+        $files = [];
+        $fileCounter = 1;
+        $filename = pathinfo($csvFile, PATHINFO_FILENAME);
+        $destFile = new SplFileObject(storage_path("uploads/imports/{$filename}-{$fileCounter}.csv"), 'w+');
+        foreach ($srcFile as $index => $line) {
+            $destFile->fwrite($line);
+
+            if ((($index + 1) % $rowPerFile) === 0) {
+                $files[] = $destFile->getRealPath();
+                $fileCounter += 1;
+                $destFile = new SplFileObject(storage_path("uploads/imports/{$filename}-{$fileCounter}.csv"), 'w+');
+            }
+        }
+        $files[] = $destFile->getRealPath();
+
+        return $files;
+    }
+
+    private function getRowCount(string $csvFile): int
+    {
+        $file = new SplFileObject($csvFile);
+        $file->seek(PHP_INT_MAX);
+        return $file->key() + 1;
     }
 }

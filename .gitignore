@@ -15,6 +15,7 @@ yarn-error.log
 /.vscode
 *.mdb
 public/js/*.js
-public/js/*.css
+public/js/*.js.*.txt
+public/css/*.css
 storage/uploads/**
 storage/exports/**
