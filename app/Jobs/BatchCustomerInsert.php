@@ -50,7 +50,7 @@ class BatchCustomerInsert implements ShouldQueue
         }
 
         $query = sprintf(
-            "LOAD DATA LOCAL '%s' INTO TABLE `customers` ".
+            "LOAD DATA LOCAL INFILE '%s' INTO TABLE `customers` ".
             'FIELDS TERMINATED BY \',\' '.
             'OPTIONALLY ENCLOSED BY \'\"\' '.
             'LINES TERMINATED BY \'\n\' '.
