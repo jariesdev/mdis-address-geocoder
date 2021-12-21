@@ -63,6 +63,12 @@ class FindCustomerCoordinate implements ShouldQueue
                 dispatch(new BatchCustomerCoordinateSearch($customers, $this->customerImport));
                 Cache::put($batchCacheKey, $customers->count());
             });
+
+    }
+
+    public function failed()
+    {
+        $this->release();
     }
 
     private function findCustomerCoordinate(Customer $customer)
