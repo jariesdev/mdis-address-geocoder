@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Middleware\NominatimRateLimited;
 use App\Models\Customer;
 use App\Models\CustomerImport;
 use Illuminate\Bus\Queueable;
@@ -23,7 +24,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
     /**
      * @var Collection
      */
-    private $customers;
+    public $customers;
     /**
      * @var CustomerImport
      */
@@ -43,7 +44,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
     public function middleware()
     {
         return [
-            new RateLimited('nominatim'),
+            new NominatimRateLimited(),
         ];
     }
 
