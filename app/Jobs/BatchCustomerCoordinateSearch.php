@@ -102,7 +102,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
         if(Cache::get($batchCacheKey, 0) === 0) {
             $this->customerImport->update([
                 'status' => 'coordinate-located',
-                'success_count' => Cache::pull($successCacheKey, 0),
+                'success_count' => $this->customerImport->customers()->whereNotNull('latitude')->count(),
             ]);
             Cache::forget($successCacheKey);
             Cache::forget($cacheElapseKey);
