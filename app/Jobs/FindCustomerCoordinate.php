@@ -57,7 +57,7 @@ class FindCustomerCoordinate implements ShouldQueue
                     ->whereNull('latitude')
                     ->orWhereNull('longitude');
             })
-            ->chunk(10, function (Collection $customers) use ($batchCacheKey) {
+            ->chunk(1000, function (Collection $customers) use ($batchCacheKey) {
                 dispatch(new BatchCustomerCoordinateSearch($customers, $this->customerImport));
                 Cache::put($batchCacheKey, $customers->count());
             });
