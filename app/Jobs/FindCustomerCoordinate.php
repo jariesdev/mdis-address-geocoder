@@ -26,6 +26,8 @@ class FindCustomerCoordinate implements ShouldQueue
      */
     private $customerImport;
 
+    public $tries = 999;
+
     /**
      * Create a new job instance.
      *
