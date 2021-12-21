@@ -49,11 +49,10 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
         Redis::throttle('nominatim')
             ->block(0)->allow(1)->every(5)
             ->then(function () {
-                echo 'Lock obtained...';
+                // Lock obtained...
                 $this->jobLogic();
             }, function ()  {
                 // Could not obtain lock...
-                echo 'Could not obtain lock...';
                 dispatch(new self($this->customers, $this->customerImport))->delay(now()->addMinute());
                 $this->delete();
             });

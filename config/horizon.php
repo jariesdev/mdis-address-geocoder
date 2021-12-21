@@ -212,7 +212,7 @@ return [
                 'maxProcesses' => 3,
             ],
             'supervisor-nominatim' => [
-                'maxProcesses' => 1,
+                'maxProcesses' => 2,
             ],
         ],
 
