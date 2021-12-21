@@ -104,6 +104,9 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
                 'status' => 'coordinate-located',
                 'success_count' => Cache::pull($successCacheKey, 0),
             ]);
+            Cache::forget($successCacheKey);
+            Cache::forget($cacheElapseKey);
+            Cache::forget($batchCacheKey);
         }
     }
 
