@@ -32,7 +32,7 @@
                                 </a>
                             </template>
                             <template v-else>
-                                <a :href="`http://lookup.holos.ph/nominatim/reverse.php?street=${row.street}&city=${row.municipality_name}&country=ph`" class="text-warning"
+                                <a :href="`http://lookup.holos.ph/nominatim/search.php?street=${row.street}&city=${row.municipality_name}&country=ph`" class="text-warning"
                                    target="_blank">
                                     <i class="fas fa-exclamation-circle"></i>
                                 </a>
