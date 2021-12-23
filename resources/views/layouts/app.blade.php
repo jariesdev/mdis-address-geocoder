@@ -27,6 +27,9 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('imports.create') ? 'active' : '' }}" href="{{ route('imports.create') }}" aria-disabled="true">New Import</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('horizon.index') ? 'active' : '' }}" href="{{ route('horizon.index') }}" aria-disabled="true">Horizon</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
