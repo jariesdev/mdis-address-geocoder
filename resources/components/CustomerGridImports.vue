@@ -154,7 +154,7 @@ const loadCustomers = debounce(() => {
     getCustomers(props.importId, {
         page: page.value > 1 ? page.value : 1,
         perPage: perPage.value,
-        onlyEmptyCoordinates: onlyEmptyCoordinates.value,
+        onlyEmptyCoordinates: onlyEmptyCoordinates.value === true || undefined,
     })
         .then(({data, meta, links}) => {
             customers.value = data
