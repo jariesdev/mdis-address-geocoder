@@ -22,7 +22,7 @@
                         <td>
                             {{ row.status }}
                             <span title="1k/Batch remaining" v-if="row.status === 'coordinate-searching'">
-                                ({{ row.batch_remaining }})
+                                (<animated-number :value="row.batch_remaining" :tween-duration="1500" />)
                             </span>
                         </td>
                         <td>
