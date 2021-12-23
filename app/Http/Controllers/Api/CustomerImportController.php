@@ -148,7 +148,7 @@ class CustomerImportController extends Controller
     {
         $customers = $customerImport
             ->customers()
-            ->when(filter_var($request->get('onlyEmptyCoordinates', false)), function (Builder $builder) {
+            ->when(filter_var($request->get('onlyEmptyCoordinates'), FILTER_VALIDATE_BOOLEAN), function (Builder $builder) {
                 $builder
                     ->whereNull('latitude')
                     ->orWhereNull('longitude');
