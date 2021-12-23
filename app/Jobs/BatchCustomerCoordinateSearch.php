@@ -75,7 +75,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
         }
 
         $this->customers
-            ->each(function (Customer $customer) use ($cacheElapseKey, $successCacheKey) {
+            ->each(function (Customer $customer, $key) use ($cacheElapseKey, $successCacheKey) {
                 Cache::increment($cacheElapseKey);
                 try {
                     $coordinate = $this->findCustomerCoordinate($customer);
@@ -87,6 +87,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
                             'geocoder_data' => $coordinate->data,
                         ]);
                     }
+                    $this->customers->pull($key);
                 } catch (\Throwable $exception) {
                     $customer->update([
                         'geocoder_data' => json_encode([
