@@ -23,6 +23,7 @@ class CustomerImportResource extends JsonResource
             'status' => $status,
             'success_count' => $status === 'coordinate-searching' ? Cache::get("imports.{$this->resource->id}.success-counter", 0) : $this->resource->success_count,
             'search_elapse_count' => $status === 'coordinate-searching' ? Cache::get("imports.{$this->resource->id}.success-elapse-counter", 0) : 0,
+            'batch_remaining' => $status === 'coordinate-searching' ? Cache::get("imports.{$this->resource->id}.coordinate-batch-search-remaining", 0) : 0,
             'total' => $status === 'importing' ? Cache::get("imports.{$this->resource->id}.record-counter", 0) : $this->resource->total,
             'created_at' => $this->resource->created_at,
             'csv_path' => $this->resource->csv_path,

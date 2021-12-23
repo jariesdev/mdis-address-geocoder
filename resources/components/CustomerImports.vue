@@ -19,7 +19,12 @@
                                 {{ row.file }}
                             </a>
                         </td>
-                        <td>{{ row.status }}</td>
+                        <td>
+                            {{ row.status }}
+                            <span title="1k/Batch remaining" v-if="row.status === 'coordinate-searching'">
+                                ({{ row.batch_remaining }})
+                            </span>
+                        </td>
                         <td>
                             <animated-number :value="row.total" :tween-duration="1500" />
                         </td>
