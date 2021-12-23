@@ -24,6 +24,7 @@
         "@popperjs/core": "^2.11.0",
         "@tweenjs/tween.js": "^18.6.4",
         "bootstrap": "^5.1.3",
+        "handsontable": "^11.0.1",
         "plupload": "^2.3.9",
         "vue": "^3.2.26"
     }

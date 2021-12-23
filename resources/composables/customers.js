@@ -18,6 +18,12 @@ export const customerImport = () => {
     const locateCustomers = (importId) => {
         return http.post(`/api/imports/${importId}/locate-customers`).then(({data}) => data);
     }
+    const updateCustomer = ({customerId, data}) => {
+        return http.put(`/api/customers/${customerId}`, data).then(({data}) => data);
+    }
+    const updateCustomers = (customers) => {
+        return http.post(`/api/customers/batch-update`, {customers}).then(({data}) => data);
+    }
 
     return {
         getCustomerImports,
@@ -25,5 +31,7 @@ export const customerImport = () => {
         generateCsv,
         getCustomers,
         locateCustomers,
+        updateCustomer,
+        updateCustomers,
     }
 }

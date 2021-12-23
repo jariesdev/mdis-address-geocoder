@@ -8,6 +8,7 @@ use App\Jobs\FindCustomerCoordinate;
 use App\Jobs\ImportMdb;
 use App\Models\CustomerImport;
 use App\Repositories\CustomerInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\File;
@@ -145,7 +146,16 @@ class CustomerImportController extends Controller
      */
     public function customers(Request $request, CustomerImport $customerImport)
     {
-        $customers = $customerImport->customers()->simplePaginate($request->get('perPage', 15));
+        $customers = $customerImport
+            ->customers()
+            ->when($request->get('onlyEmptyCoordinates'), function (Builder $builder, $value) {
+                if(filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
+                    $builder
+                        ->whereNull('latitude')
+                        ->orWhereNull('longitude');
+                }
+            })
+            ->simplePaginate($request->get('perPage', 15));
         return JsonResource::collection($customers);
     }
 

@@ -86,10 +86,21 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
                             'longitude' => $coordinate->longitude,
                             'geocoder_data' => $coordinate->data,
                         ]);
+                    }else{
+                        $customer->update([
+                            'latitude' => null,
+                            'longitude' => null,
+                            'geocoder_data' => json_encode([
+                                'success' => false,
+                                'message' => 'Location not found.',
+                            ]),
+                        ]);
                     }
                     $this->customers->pull($key);
                 } catch (\Throwable $exception) {
                     $customer->update([
+                        'latitude' => null,
+                        'longitude' => null,
                         'geocoder_data' => json_encode([
                             'success' => false,
                             'message' => $exception->getMessage(),

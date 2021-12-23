@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerImportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,3 +31,5 @@ Route::get('imports/{customerImport}/customers', [CustomerImportController::clas
     ->name('imports.customers.index');
 Route::get('imports/{customerImport}/download-csv', [CustomerImportController::class, 'downloadCSV'])
     ->name('imports.download-csv');
+Route::post('customers/batch-update', [CustomerController::class, 'batchUpdate'])->name('customers.batch-update');
+Route::resource('customers', CustomerController::class)->only(['store']);

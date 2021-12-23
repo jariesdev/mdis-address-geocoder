@@ -40,4 +40,12 @@ class CustomerImportController extends Controller
     {
         return view('customers');
     }
+
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
+    public function customersGrid()
+    {
+        return view('customers-grid');
+    }
 }
