@@ -146,14 +146,15 @@ class CustomerImportController extends Controller
      */
     public function customers(Request $request, CustomerImport $customerImport)
     {
-        $customers = $customerImport
-            ->customers()
-            ->when(filter_var($request->get('onlyEmptyCoordinates'), FILTER_VALIDATE_BOOLEAN), function (Builder $builder) {
+        $query = $customerImport->customers();
+        if(filter_var($request->get('onlyEmptyCoordinates'), FILTER_VALIDATE_BOOLEAN)) {
+            $query->where(function (Builder $builder) {
                 $builder
                     ->whereNull('latitude')
                     ->orWhereNull('longitude');
-            })
-            ->simplePaginate($request->get('perPage', 15));
+            });
+        }
+        $customers = $query->simplePaginate($request->get('perPage', 15));
         return JsonResource::collection($customers);
     }
 
