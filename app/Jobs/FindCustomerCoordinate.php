@@ -26,8 +26,6 @@ class FindCustomerCoordinate implements ShouldQueue
      */
     private $customerImport;
 
-    public $tries = 999;
-
     /**
      * Create a new job instance.
      *
@@ -61,7 +59,7 @@ class FindCustomerCoordinate implements ShouldQueue
             })
             ->chunk(1000, function (Collection $customers) use ($batchCacheKey) {
                 dispatch(new BatchCustomerCoordinateSearch($customers, $this->customerImport));
-                Cache::put($batchCacheKey, $customers->count());
+                Cache::increment($batchCacheKey);
             });
 
     }

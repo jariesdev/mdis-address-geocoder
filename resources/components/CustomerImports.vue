@@ -81,6 +81,9 @@ const loadCustomerImports = () => {
     getCustomerImports().then(({data}) => {
         customerImports.value = data
     })
+    .finally(() => {
+        setTimeout(loadCustomerImports, 5000)
+    })
 }
 const generateCsvTrigger = (row) => {
     row.status = 'generating-csv'
@@ -92,7 +95,6 @@ const locateImportCustomers = (row) => {
 }
 
 onMounted(() => {
-    setInterval(loadCustomerImports, 5000)
     loadCustomerImports()
 })
 </script>

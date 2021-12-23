@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Middleware\NominatimRateLimited;
 use App\Models\Customer;
 use App\Models\CustomerImport;
 use Illuminate\Bus\Queueable;
@@ -15,6 +16,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 
 class BatchCustomerCoordinateSearch implements ShouldQueue
 {
@@ -23,7 +25,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
     /**
      * @var Collection
      */
-    private $customers;
+    public $customers;
     /**
      * @var CustomerImport
      */
@@ -38,18 +40,22 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
     {
         $this->customers = $customers;
         $this->customerImport = $customerImport;
+
+        $this->onQueue('nominatim');
     }
 
-    public function middleware()
+    public function handle()
     {
-        return [
-            new RateLimited('nominatim'),
-        ];
-    }
-
-    public function retryUntil()
-    {
-        return now()->addMinutes(1);
+        Redis::throttle('nominatim')
+            ->block(0)->allow(1)->every(5)
+            ->then(function () {
+                // Lock obtained...
+                $this->jobLogic();
+            }, function ()  {
+                // Could not obtain lock...
+                dispatch(new self($this->customers, $this->customerImport))->delay(now()->addMinute());
+                $this->delete();
+            });
     }
 
     /**
@@ -57,7 +63,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function jobLogic()
     {
         $successCacheKey = "imports.{$this->customerImport->id}.success-counter";
         if (!Cache::has($successCacheKey)) {
@@ -69,7 +75,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
         }
 
         $this->customers
-            ->each(function (Customer $customer) use ($cacheElapseKey, $successCacheKey) {
+            ->each(function (Customer $customer, $key) use ($cacheElapseKey, $successCacheKey) {
                 Cache::increment($cacheElapseKey);
                 try {
                     $coordinate = $this->findCustomerCoordinate($customer);
@@ -81,6 +87,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
                             'geocoder_data' => $coordinate->data,
                         ]);
                     }
+                    $this->customers->pull($key);
                 } catch (\Throwable $exception) {
                     $customer->update([
                         'geocoder_data' => json_encode([
@@ -96,8 +103,11 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
         if(Cache::get($batchCacheKey, 0) === 0) {
             $this->customerImport->update([
                 'status' => 'coordinate-located',
-                'success_count' => Cache::pull($successCacheKey, 0),
+                'success_count' => $this->customerImport->customers()->whereNotNull('latitude')->count(),
             ]);
+            Cache::forget($successCacheKey);
+            Cache::forget($cacheElapseKey);
+            Cache::forget($batchCacheKey);
         }
     }
 

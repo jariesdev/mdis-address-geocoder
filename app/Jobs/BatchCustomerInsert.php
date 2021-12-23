@@ -68,9 +68,11 @@ class BatchCustomerInsert implements ShouldQueue
         Cache::decrement($batchCacheKey);
         if (Cache::get($batchCacheKey, 0) === 0) {
             $this->customerImport->update([
-                'total' => Cache::pull($counterCacheKey, 0),
+                'total' => $this->customerImport->customers()->count(),
                 'status' => 'imported',
             ]);
+            Cache::forget($batchCacheKey);
+            Cache::forget($counterCacheKey);
         }
 
         File::delete($this->csvFile);
