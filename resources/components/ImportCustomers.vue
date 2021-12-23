@@ -26,13 +26,13 @@
                         <td>{{ row.source_table }}</td>
                         <td>
                             <template v-if="row.latitude && row.longitude">
-                                <a :href="`http://lookup.holos.ph/nominatim/reverse.php?lat=${row.latitude}&lon=${row.longitude}&zoom=16&format=html`"
+                                <a :href="`${nominatimUrl}/reverse.php?lat=${row.latitude}&lon=${row.longitude}&zoom=16&format=html`"
                                    target="_blank">
                                     {{ row.latitude }}, {{ row.longitude }}
                                 </a>
                             </template>
                             <template v-else>
-                                <a :href="`http://lookup.holos.ph/nominatim/search.php?street=${row.street}&city=${row.municipality_name}&country=ph`" class="text-warning"
+                                <a :href="`${nominatimUrl}/search.php?street=${row.street}&city=${row.municipality_name}&country=ph`" class="text-warning"
                                    target="_blank">
                                     <i class="fas fa-exclamation-circle"></i>
                                 </a>
@@ -97,6 +97,10 @@ import debounce from "lodash/debounce";
 const props = defineProps({
     importId: {
         type: [String, Number],
+        required: true
+    },
+    nominatimUrl: {
+        type: String,
         required: true
     }
 })

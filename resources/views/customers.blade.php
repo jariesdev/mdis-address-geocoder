@@ -7,7 +7,7 @@
                 <h3>Customers</h3>
             </div>
             <div class="py-3">
-                <import-customers :import-id="{{ request()->customerImport }}"></import-customers>
+                <import-customers nominatim-url="{{ config('nominatim.url') }}" :import-id="{{ request()->customerImport }}"></import-customers>
             </div>
         </div>
     </div>
