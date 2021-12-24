@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
+        "ext-json": "*",
         "ext-odbc": "*",
         "ext-pdo": "*",
         "fruitcake/laravel-cors": "^2.0",
@@ -14,9 +15,7 @@
         "laravel/horizon": "^5.7",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
-        "ext-pdo": "*",
-        "ext-odbc": "*",
-        "ext-json": "*"
+        "league/csv": "^9.7"
     },
     "require-dev": {
         "facade/ignition": "^2.5",

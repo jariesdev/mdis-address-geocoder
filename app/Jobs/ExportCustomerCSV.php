@@ -13,6 +13,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use League\Csv\Reader;
+use League\Csv\Writer;
 
 class ExportCustomerCSV implements ShouldQueue
 {
@@ -39,6 +41,7 @@ class ExportCustomerCSV implements ShouldQueue
      * Execute the job.
      *
      * @return void
+     * @throws \League\Csv\CannotInsertRecord
      */
     public function handle()
     {
@@ -47,7 +50,8 @@ class ExportCustomerCSV implements ShouldQueue
         ]);
 
         $filename = storage_path("exports/{$this->customerImport->table_name}-{$this->customerImport->id}-location.csv");
-        file_put_contents($filename, implode(',', [
+        $csv = Writer::createFromPath($filename, 'w');
+        $header = [
             'REFID',
             'STREET',
             'BARANGAYNAME',
@@ -57,14 +61,14 @@ class ExportCustomerCSV implements ShouldQueue
             'ISLAND',
             'LATITUDE',
             'LONGITUDE',
-        ]).PHP_EOL);
+        ];
+        $csv->insertOne($header);
 
         Customer::query()
             ->where('customer_import_id', $this->customerImport->id)
-            ->chunk(10000, function (Collection $customers) use ($filename) {
-                $handle = fopen($filename, "a") or die("Unable to open file!");
-                $customers->each(function (Customer $customer) use ($handle) {
-                    fputcsv($handle, $customer->only([
+            ->chunk(10000, function (Collection $customers) use ($csv) {
+                $records = $customers->map(function (Customer $customer)  {
+                    return $customer->only([
                         'refid',
                         'street',
                         'barangay_name',
@@ -74,8 +78,9 @@ class ExportCustomerCSV implements ShouldQueue
                         'island',
                         'latitude',
                         'longitude',
-                    ]));
+                    ]);
                 });
+                $csv->insertAll($records);
             });
 
         $this->customerImport->update([
