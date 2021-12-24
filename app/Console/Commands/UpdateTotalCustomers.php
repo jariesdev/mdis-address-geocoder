@@ -41,6 +41,7 @@ class UpdateTotalCustomers extends Command
         CustomerImport::query()
             ->each(function (CustomerImport $customerImport) {
                 $customerImport->update([
+                    'total' => $customerImport->customers()->count(),
                     'success_count' => $customerImport->customers()->whereNotNull('latitude')->count(),
                 ]);
             });
