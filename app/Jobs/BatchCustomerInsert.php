@@ -66,7 +66,7 @@ class BatchCustomerInsert implements ShouldQueue
 
         $batchCacheKey = "imports.{$this->customerImport->id}.import-batch-remaining";
         Cache::decrement($batchCacheKey);
-        if (Cache::get($batchCacheKey, 0) === 0) {
+        if (Cache::get($batchCacheKey, 0) <= 0) {
             $this->customerImport->update([
                 'total' => $this->customerImport->customers()->count(),
                 'status' => 'imported',

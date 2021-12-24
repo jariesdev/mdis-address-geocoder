@@ -111,7 +111,7 @@ class BatchCustomerCoordinateSearch implements ShouldQueue
 
         $batchCacheKey = "imports.{$this->customerImport->id}.coordinate-batch-search-remaining";
         Cache::decrement($batchCacheKey);
-        if(Cache::get($batchCacheKey, 0) === 0) {
+        if(Cache::get($batchCacheKey, 0) <= 0) {
             $this->customerImport->update([
                 'status' => 'coordinate-located',
                 'success_count' => $this->customerImport->customers()->whereNotNull('latitude')->count(),
