@@ -65,6 +65,7 @@ class ExportCustomerCSV implements ShouldQueue
         $csv->insertOne($header);
 
         Customer::query()
+            ->whereNotNull('latitude')
             ->where('customer_import_id', $this->customerImport->id)
             ->chunk(10000, function (Collection $customers) use ($csv) {
                 $records = $customers->map(function (Customer $customer)  {
